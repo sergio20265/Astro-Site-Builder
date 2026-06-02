@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Web build output
+dist/
+astro-export/
+
+# Local logs
+*.log
+.dev-server*.log
+
+# Release artifacts
+*.apk
+*.aab
+*.ap_
+
+# Android local/build files
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/*.jks
+android/app/*.keystore
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
