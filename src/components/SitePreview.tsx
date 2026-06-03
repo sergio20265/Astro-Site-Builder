@@ -261,12 +261,79 @@ function BlockView({ block, messages, active, onSelect, onUpdateBlock, onOpenLig
         ))}
       </div>
     );
+
+    case 'pricing': return (
+      <section className={`${shellClass} preview-section ${padClass}`} style={blockStyle} onClick={onSelect}>
+        <h2><EditableText value={block.title} onChange={(title) => onUpdateBlock(block.id, { title })} /></h2>
+        <div className="pricing-grid">
+          {block.items.map((item, index) => (
+            <div key={index} className={item.highlight ? 'pricing-card pricing-highlight' : 'pricing-card'}>
+              <div className="pricing-name"><EditableText value={item.name} onChange={(name) => { const items = [...block.items]; items[index] = { ...item, name }; onUpdateBlock(block.id, { items }); }} /></div>
+              <div className="pricing-price">
+                <span className="pricing-amount"><EditableText value={item.price} onChange={(price) => { const items = [...block.items]; items[index] = { ...item, price }; onUpdateBlock(block.id, { items }); }} /></span>
+                <span className="pricing-period"><EditableText value={item.period} onChange={(period) => { const items = [...block.items]; items[index] = { ...item, period }; onUpdateBlock(block.id, { items }); }} /></span>
+              </div>
+              <ul className="pricing-features">
+                {item.features.split('\n').filter(Boolean).map((f, i) => <li key={i}>{f.trim()}</li>)}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+
+    case 'team': return (
+      <section className={`${shellClass} preview-section ${padClass}`} style={blockStyle} onClick={onSelect}>
+        <h2><EditableText value={block.title} onChange={(title) => onUpdateBlock(block.id, { title })} /></h2>
+        <div className="team-grid">
+          {block.items.map((item, index) => (
+            <div key={index} className="team-card">
+              <div className="preview-media-editor team-avatar">
+                {item.image ? <img src={item.image} alt={item.name} /> : <div className="image-placeholder" />}
+                <ImageEditor value={item.image} onChange={(image) => { const items = [...block.items]; items[index] = { ...item, image }; onUpdateBlock(block.id, { items }); }} messages={messages} />
+              </div>
+              <h3><EditableText value={item.name} onChange={(name) => { const items = [...block.items]; items[index] = { ...item, name }; onUpdateBlock(block.id, { items }); }} /></h3>
+              <p className="team-role"><EditableText value={item.role} onChange={(role) => { const items = [...block.items]; items[index] = { ...item, role }; onUpdateBlock(block.id, { items }); }} /></p>
+              <p className="team-bio"><EditableText multiline value={item.bio} onChange={(bio) => { const items = [...block.items]; items[index] = { ...item, bio }; onUpdateBlock(block.id, { items }); }} /></p>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+
+    case 'cta': return (
+      <section className={`${shellClass} preview-cta ${padClass}`} style={blockStyle} onClick={onSelect}>
+        <h2><EditableText value={block.title} onChange={(title) => onUpdateBlock(block.id, { title })} /></h2>
+        <p><EditableText multiline value={block.text} onChange={(text) => onUpdateBlock(block.id, { text })} /></p>
+        <a href={block.buttonHref} onClick={(e) => e.preventDefault()}><EditableText value={block.buttonLabel} onChange={(buttonLabel) => onUpdateBlock(block.id, { buttonLabel })} /></a>
+      </section>
+    );
+
+    case 'html': return (
+      <section className={`${shellClass} preview-section ${padClass}`} style={blockStyle} onClick={onSelect}>
+        {block.title && <h2>{block.title}</h2>}
+        <div dangerouslySetInnerHTML={{ __html: block.code }} />
+      </section>
+    );
   }
 }
 
 export default function SitePreview({ site, page, messages, activeBlockId, onSelectBlock, onUpdateBlock, onUpdateSite }: Props) {
   const [lightbox, setLightbox] = useState<{ src: string; caption: string } | null>(null);
   const logoUploadRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const fonts = [site.fonts?.heading, site.fonts?.body].filter((f): f is string => Boolean(f));
+    fonts.forEach((font) => {
+      const key = font.replace(/\s+/g, '_');
+      if (document.querySelector(`link[data-gfont="${key}"]`)) return;
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.setAttribute('data-gfont', key);
+      link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}:wght@400;600;700&display=swap`;
+      document.head.appendChild(link);
+    });
+  }, [site.fonts?.heading, site.fonts?.body]);
 
   const headerNav = site.navGroups?.find((g) => g.position === 'header');
   const footerNav = site.navGroups?.find((g) => g.position === 'footer');
@@ -299,6 +366,8 @@ export default function SitePreview({ site, page, messages, activeBlockId, onSel
     previewStyle.backgroundPosition = 'center';
     previewStyle.backgroundRepeat = 'no-repeat';
   }
+  if (site.fonts?.heading) previewStyle['--preview-heading-font'] = `'${site.fonts.heading}', sans-serif`;
+  if (site.fonts?.body) previewStyle['--preview-body-font'] = `'${site.fonts.body}', sans-serif`;
 
   function renderBlock(block: SiteBlock) {
     return (

@@ -14,13 +14,14 @@ import {
   type SiteBlock,
   type SiteContent,
   createBlock,
+  googleFonts,
   initialSite,
   themes,
 } from './lib/site';
 
 const storageKey = 'astro-site-builder-content';
 const localeStorageKey = 'astro-site-builder-locale';
-const blockTypes: BlockType[] = ['hero', 'services', 'portfolio', 'gallery', 'video', 'testimonials', 'faq', 'form', 'contact', 'sidebar'];
+const blockTypes: BlockType[] = ['hero', 'services', 'portfolio', 'gallery', 'video', 'testimonials', 'faq', 'form', 'contact', 'sidebar', 'pricing', 'team', 'cta', 'html'];
 const menuItems = ['content', 'design', 'seo', 'export'] as const;
 
 type MenuItem = (typeof menuItems)[number];
@@ -367,6 +368,62 @@ function BlockContentEditor({ block, updateBlock, t }: { block: SiteBlock; updat
     </>
   );
 
+  if (block.type === 'pricing') return (
+    <>
+      <EditorHeader title={t('block.pricing')} hint={t('editorHint.pricing')} />
+      <Field label={t('field.title')} value={block.title} onChange={(title) => updateBlock(block.id, { title })} />
+      {block.items.map((item, index) => (
+        <div className="repeat-row" key={index}>
+          <Field label={t('field.planName')} value={item.name} onChange={(name) => { const items = [...block.items]; items[index] = { ...item, name }; updateBlock(block.id, { items }); }} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <Field label={t('field.planPrice')} value={item.price} onChange={(price) => { const items = [...block.items]; items[index] = { ...item, price }; updateBlock(block.id, { items }); }} />
+            <Field label={t('field.planPeriod')} value={item.period} onChange={(period) => { const items = [...block.items]; items[index] = { ...item, period }; updateBlock(block.id, { items }); }} />
+          </div>
+          <Field label={t('field.planFeatures')} value={item.features} textarea onChange={(features) => { const items = [...block.items]; items[index] = { ...item, features }; updateBlock(block.id, { items }); }} />
+          <label className="check-row">
+            <input type="checkbox" checked={item.highlight} onChange={(e) => { const items = [...block.items]; items[index] = { ...item, highlight: e.target.checked }; updateBlock(block.id, { items }); }} />
+            {t('field.planHighlight')}
+          </label>
+        </div>
+      ))}
+      <button className="soft-button" onClick={() => updateBlock(block.id, { items: [...block.items, { name: 'Plan', price: '0', period: '/mo', features: 'Feature one\nFeature two', highlight: false }] })}>{t('action.addItem')}</button>
+    </>
+  );
+
+  if (block.type === 'team') return (
+    <>
+      <EditorHeader title={t('block.team')} hint={t('editorHint.team')} />
+      <Field label={t('field.title')} value={block.title} onChange={(title) => updateBlock(block.id, { title })} />
+      {block.items.map((item, index) => (
+        <div className="repeat-row" key={index}>
+          <Field label={t('field.name')} value={item.name} onChange={(name) => { const items = [...block.items]; items[index] = { ...item, name }; updateBlock(block.id, { items }); }} />
+          <Field label={t('field.role')} value={item.role} onChange={(role) => { const items = [...block.items]; items[index] = { ...item, role }; updateBlock(block.id, { items }); }} />
+          <Field label={t('field.bio')} value={item.bio} textarea onChange={(bio) => { const items = [...block.items]; items[index] = { ...item, bio }; updateBlock(block.id, { items }); }} />
+          <ImageField label={t('field.imageUrl')} value={item.image} onChange={(image) => { const items = [...block.items]; items[index] = { ...item, image }; updateBlock(block.id, { items }); }} t={t} />
+        </div>
+      ))}
+      <button className="soft-button" onClick={() => updateBlock(block.id, { items: [...block.items, { name: 'Team Member', role: 'Role', bio: 'Short bio.', image: '' }] })}>{t('action.addItem')}</button>
+    </>
+  );
+
+  if (block.type === 'cta') return (
+    <>
+      <EditorHeader title={t('block.cta')} hint={t('editorHint.cta')} />
+      <Field label={t('field.title')} value={block.title} onChange={(title) => updateBlock(block.id, { title })} />
+      <Field label={t('field.text')} value={block.text} textarea onChange={(text) => updateBlock(block.id, { text })} />
+      <Field label={t('field.buttonLabel')} value={block.buttonLabel} onChange={(buttonLabel) => updateBlock(block.id, { buttonLabel })} />
+      <Field label={t('field.buttonHref')} value={block.buttonHref} onChange={(buttonHref) => updateBlock(block.id, { buttonHref })} />
+    </>
+  );
+
+  if (block.type === 'html') return (
+    <>
+      <EditorHeader title={t('block.html')} hint={t('editorHint.html')} />
+      <Field label={t('field.title')} value={block.title} onChange={(title) => updateBlock(block.id, { title })} />
+      <Field label={t('field.htmlCode')} value={block.code} textarea onChange={(code) => updateBlock(block.id, { code })} />
+    </>
+  );
+
   const itemLabels = block.type === 'services' ? [t('field.title'), t('field.text')] : block.type === 'testimonials' ? [t('field.name'), t('field.text')] : [t('field.question'), t('field.answer')];
   return (
     <>
@@ -499,6 +556,17 @@ export default function App() {
     setSelectedId(blocks[0]?.id ?? '');
   }
 
+  function duplicateBlock(id: string) {
+    const block = currentBlocks.find((b) => b.id === id);
+    if (!block) return;
+    const copy = { ...block, id: `${block.type}-${crypto.randomUUID().slice(0, 8)}` } as SiteBlock;
+    const index = currentBlocks.findIndex((b) => b.id === id);
+    const blocks = [...currentBlocks];
+    blocks.splice(index + 1, 0, copy);
+    updateActivePageBlocks(blocks);
+    setSelectedId(copy.id);
+  }
+
   function downloadJson() {
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -612,6 +680,7 @@ export default function App() {
                     <div className="block-actions">
                       <button onClick={() => moveBlock(block.id, -1)} disabled={index === 0}>{t('action.up')}</button>
                       <button onClick={() => moveBlock(block.id, 1)} disabled={index === currentBlocks.length - 1}>{t('action.down')}</button>
+                      <button onClick={() => duplicateBlock(block.id)}>{t('action.duplicate')}</button>
                       <button onClick={() => removeBlock(block.id)}>{t('action.delete')}</button>
                     </div>
                   </article>
@@ -645,6 +714,22 @@ export default function App() {
                 <ColorField label={t('field.bgColor')} value={site.bgColor ?? ''} onChange={(bgColor) => updateSite({ ...site, bgColor })} clearLabel={t('action.clear')} />
                 <ImageField label={t('field.bgImage')} value={site.bgImage ?? ''} onChange={(bgImage) => updateSite({ ...site, bgImage })} t={t} />
               </div>
+              <div className="panel">
+                <h2>{t('section.fonts')}</h2>
+                <p className="panel-note">{t('fonts.help')}</p>
+                <div className="field">
+                  <span>{t('field.headingFont')}</span>
+                  <select value={site.fonts?.heading ?? ''} onChange={(e) => updateSite({ ...site, fonts: { ...site.fonts, heading: e.target.value } })}>
+                    {googleFonts.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+                  </select>
+                </div>
+                <div className="field">
+                  <span>{t('field.bodyFont')}</span>
+                  <select value={site.fonts?.body ?? ''} onChange={(e) => updateSite({ ...site, fonts: { ...site.fonts, body: e.target.value } })}>
+                    {googleFonts.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+                  </select>
+                </div>
+              </div>
             </div>
             <div style={{ display: 'grid', gap: 12, alignContent: 'start' }}>
               <div className="panel">
@@ -659,6 +744,15 @@ export default function App() {
                 </div>
               </div>
               <NavEditor site={site} updateSite={updateSite} t={t} />
+              <div className="panel">
+                <h2>{t('section.analytics')}</h2>
+                <p className="panel-note">{t('analytics.help')}</p>
+                <Field label={t('field.gtm')} value={site.analytics?.gtm ?? ''} onChange={(gtm) => updateSite({ ...site, analytics: { ...site.analytics, gtm } })} placeholder="GTM-XXXXXX" />
+                <Field label={t('field.ga4')} value={site.analytics?.ga4 ?? ''} onChange={(ga4) => updateSite({ ...site, analytics: { ...site.analytics, ga4 } })} placeholder="G-XXXXXXXXXX" />
+                <Field label={t('field.metrika')} value={site.analytics?.metrika ?? ''} onChange={(metrika) => updateSite({ ...site, analytics: { ...site.analytics, metrika } })} placeholder="12345678" />
+                <Field label={t('field.vkPixel')} value={site.analytics?.vkPixel ?? ''} onChange={(vkPixel) => updateSite({ ...site, analytics: { ...site.analytics, vkPixel } })} placeholder="VK-RTRG-XXXXXX" />
+                <Field label={t('field.fbPixel')} value={site.analytics?.fbPixel ?? ''} onChange={(fbPixel) => updateSite({ ...site, analytics: { ...site.analytics, fbPixel } })} placeholder="XXXXXXXXXXXXXXXXXX" />
+              </div>
             </div>
           </section>
         )}

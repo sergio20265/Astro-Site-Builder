@@ -1,5 +1,5 @@
 export type ThemeId = 'moss' | 'ink' | 'rose' | 'night' | 'cream' | 'ocean';
-export type BlockType = 'hero' | 'services' | 'portfolio' | 'gallery' | 'video' | 'testimonials' | 'faq' | 'form' | 'contact' | 'sidebar';
+export type BlockType = 'hero' | 'services' | 'portfolio' | 'gallery' | 'video' | 'testimonials' | 'faq' | 'form' | 'contact' | 'sidebar' | 'pricing' | 'team' | 'cta' | 'html';
 export type AnimationType = 'none' | 'fade' | 'slide-up' | 'slide-left' | 'slide-right' | 'zoom';
 export type PaddingSize = 'compact' | 'normal' | 'spacious';
 
@@ -37,6 +37,14 @@ export type NavGroup = {
   items: NavItem[];
 };
 
+export type SiteAnalytics = {
+  gtm?: string;
+  ga4?: string;
+  metrika?: string;
+  vkPixel?: string;
+  fbPixel?: string;
+};
+
 export type PageSeo = {
   title?: string;
   description?: string;
@@ -64,7 +72,11 @@ export type SiteBlock =
   | { id: string; type: 'faq'; title: string; items: Array<{ q: string; a: string }>; style?: BlockStyle; animation?: BlockAnimation }
   | { id: string; type: 'form'; title: string; text: string; submitLabel: string; fields: Array<{ label: string; kind: 'text' | 'email' | 'tel' | 'textarea'; required: boolean }>; style?: BlockStyle; animation?: BlockAnimation }
   | { id: string; type: 'contact'; title: string; text: string; email: string; phone: string; address: string; style?: BlockStyle; animation?: BlockAnimation }
-  | { id: string; type: 'sidebar'; title: string; position: 'left' | 'right'; widgets: SidebarWidget[]; style?: BlockStyle; animation?: BlockAnimation };
+  | { id: string; type: 'sidebar'; title: string; position: 'left' | 'right'; widgets: SidebarWidget[]; style?: BlockStyle; animation?: BlockAnimation }
+  | { id: string; type: 'pricing'; title: string; items: Array<{ name: string; price: string; period: string; features: string; highlight: boolean }>; style?: BlockStyle; animation?: BlockAnimation }
+  | { id: string; type: 'team'; title: string; items: Array<{ name: string; role: string; bio: string; image: string }>; style?: BlockStyle; animation?: BlockAnimation }
+  | { id: string; type: 'cta'; title: string; text: string; buttonLabel: string; buttonHref: string; style?: BlockStyle; animation?: BlockAnimation }
+  | { id: string; type: 'html'; title: string; code: string; style?: BlockStyle; animation?: BlockAnimation };
 
 export type SiteContent = {
   name: string;
@@ -82,6 +94,8 @@ export type SiteContent = {
   };
   pages: PageContent[];
   blocks: SiteBlock[];
+  analytics?: SiteAnalytics;
+  fonts?: { heading?: string; body?: string };
 };
 
 export const themes: Record<ThemeId, { name: string; colors: string[]; description: string }> = {
@@ -116,6 +130,20 @@ export const themes: Record<ThemeId, { name: string; colors: string[]; descripti
     description: 'Clean coastal palette for travel, wellness and lifestyle.',
   },
 };
+
+export const googleFonts = [
+  { value: '', label: 'System default' },
+  { value: 'Inter', label: 'Inter' },
+  { value: 'Roboto', label: 'Roboto' },
+  { value: 'Montserrat', label: 'Montserrat' },
+  { value: 'Playfair Display', label: 'Playfair Display' },
+  { value: 'Lora', label: 'Lora' },
+  { value: 'Merriweather', label: 'Merriweather' },
+  { value: 'Raleway', label: 'Raleway' },
+  { value: 'Oswald', label: 'Oswald' },
+  { value: 'PT Sans', label: 'PT Sans' },
+  { value: 'Nunito', label: 'Nunito' },
+];
 
 const defaultNavGroups: NavGroup[] = [
   {
@@ -187,5 +215,13 @@ export function createBlock(type: BlockType): SiteBlock {
     case 'form': return { id, type, title: 'Contact form', text: 'Ask visitors for the details you need.', submitLabel: 'Send', fields: [{ label: 'Name', kind: 'text', required: true }, { label: 'Email', kind: 'email', required: true }] };
     case 'contact': return { id, type, title: 'Contact', text: 'Write to us.', email: '', phone: '', address: '' };
     case 'sidebar': return { id, type, title: 'Sidebar', position: 'right', widgets: [{ id: `w-${crypto.randomUUID().slice(0, 8)}`, kind: 'text', heading: 'About', body: 'A short description for this sidebar.' }, { id: `w-${crypto.randomUUID().slice(0, 8)}`, kind: 'links', heading: 'Quick links', body: 'Home | /\nAbout | /about\nContact | /contact' }] };
+    case 'pricing': return { id, type, title: 'Pricing', items: [
+      { name: 'Basic', price: '9', period: '/mo', features: 'Feature one\nFeature two\nFeature three', highlight: false },
+      { name: 'Pro', price: '29', period: '/mo', features: 'Everything in Basic\nFeature four\nFeature five\nPriority support', highlight: true },
+      { name: 'Team', price: '79', period: '/mo', features: 'Everything in Pro\nUnlimited users\nCustom integrations\nDedicated support', highlight: false },
+    ]};
+    case 'team': return { id, type, title: 'Our Team', items: [{ name: 'Team Member', role: 'Role / Position', bio: 'Short bio about this person.', image: '' }] };
+    case 'cta': return { id, type, title: 'Ready to get started?', text: 'Join thousands of happy customers today.', buttonLabel: 'Get started', buttonHref: '#contact' };
+    case 'html': return { id, type, title: 'Embed / Custom HTML', code: '<p>Your HTML, iframe or script goes here.</p>' };
   }
 }
