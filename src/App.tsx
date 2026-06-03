@@ -184,6 +184,16 @@ function NavEditor({ site, updateSite, t }: { site: SiteContent; updateSite: (s:
     updateSite({ ...site, navGroups: navGroups.map((g) => g.id === groupId ? { ...g, items: g.items.filter((i) => i.id !== itemId) } : g) });
   }
 
+  function moveItem(groupId: string, index: number, direction: -1 | 1) {
+    const group = navGroups.find((g) => g.id === groupId);
+    if (!group) return;
+    const items = [...group.items];
+    const next = index + direction;
+    if (next < 0 || next >= items.length) return;
+    [items[index], items[next]] = [items[next], items[index]];
+    updateGroup(groupId, { items });
+  }
+
   return (
     <div className="panel">
       <div className="mini-header">
@@ -192,7 +202,7 @@ function NavEditor({ site, updateSite, t }: { site: SiteContent; updateSite: (s:
       </div>
       {navGroups.map((group) => (
         <div className="repeat-row" key={group.id}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 6, marginBottom: 10 }}>
+          <div className="nav-group-header-row">
             <Field label={t('field.navGroupName')} value={group.name} onChange={(name) => updateGroup(group.id, { name })} />
             <div className="field">
               <span>{t('field.navPosition')}</span>
@@ -201,17 +211,17 @@ function NavEditor({ site, updateSite, t }: { site: SiteContent; updateSite: (s:
                 <option value="footer">{t('navPos.footer')}</option>
               </select>
             </div>
-            <div className="field" style={{ justifyContent: 'flex-end' }}>
-              <span style={{ visibility: 'hidden' }}>_</span>
+            <div className="nav-group-delete">
               <button className="danger-button" onClick={() => removeGroup(group.id)}>{t('action.delete')}</button>
             </div>
           </div>
-          {group.items.map((item) => (
-            <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 6, marginBottom: 6 }}>
+          {group.items.map((item, index) => (
+            <div key={item.id} className="nav-item-row">
               <Field label={t('field.navLabel')} value={item.label} onChange={(label) => updateItem(group.id, item.id, { label })} />
               <Field label={t('field.navHref')} value={item.href} onChange={(href) => updateItem(group.id, item.id, { href })} />
-              <div className="field" style={{ justifyContent: 'flex-end' }}>
-                <span style={{ visibility: 'hidden' }}>_</span>
+              <div className="nav-item-actions">
+                <button onClick={() => moveItem(group.id, index, -1)} disabled={index === 0}>↑</button>
+                <button onClick={() => moveItem(group.id, index, 1)} disabled={index === group.items.length - 1}>↓</button>
                 <button className="danger-button" onClick={() => removeItem(group.id, item.id)}>×</button>
               </div>
             </div>
@@ -496,11 +506,8 @@ export default function App() {
       <aside className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
         <button className="sidebar-close-btn" onClick={closeSidebar}>✕</button>
         <div className="brand">
-          <span>ASB</span>
-          <div>
-            <h1>{t('app.title')}</h1>
-            <p>{t('app.subtitle')}</p>
-          </div>
+          <img src="/weblogo.jpg" className="brand-logo-img" alt="" />
+
         </div>
         <nav className="app-menu" aria-label="Builder sections">
           {menuItems.map((item) => (
@@ -592,7 +599,7 @@ export default function App() {
         )}
 
         {activeMenu === 'design' && (
-          <section className="settings-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+          <section className="settings-grid">
             <div style={{ display: 'grid', gap: 12, alignContent: 'start' }}>
               <div className="panel">
                 <h2>{t('section.site')}</h2>
@@ -673,6 +680,7 @@ export default function App() {
             activeBlockId={selectedId}
             onSelectBlock={setSelectedId}
             onUpdateBlock={updateBlock}
+            onUpdateSite={(patch) => updateSite({ ...site, ...patch })}
           />
         )}
       </aside>

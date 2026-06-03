@@ -10,6 +10,7 @@ type Props = {
   activeBlockId: string;
   onSelectBlock: (id: string) => void;
   onUpdateBlock: (id: string, patch: Partial<SiteBlock>) => void;
+  onUpdateSite: (patch: Partial<SiteContent>) => void;
 };
 
 function AnimationWrapper({ animation, children }: { animation?: BlockAnimation; children: React.ReactNode }) {
@@ -262,11 +263,25 @@ function BlockView({ block, messages, active, onSelect, onUpdateBlock, onOpenLig
   }
 }
 
-export default function SitePreview({ site, page, messages, activeBlockId, onSelectBlock, onUpdateBlock }: Props) {
+export default function SitePreview({ site, page, messages, activeBlockId, onSelectBlock, onUpdateBlock, onUpdateSite }: Props) {
   const [lightbox, setLightbox] = useState<{ src: string; caption: string } | null>(null);
+  const logoUploadRef = useRef<HTMLInputElement>(null);
 
   const headerNav = site.navGroups?.find((g) => g.position === 'header');
   const footerNav = site.navGroups?.find((g) => g.position === 'footer');
+
+  function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => onUpdateSite({ logo: reader.result as string });
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }
+
+  function updateNavItem(groupId: string, itemId: string, label: string) {
+    onUpdateSite({ navGroups: site.navGroups?.map((g) => g.id === groupId ? { ...g, items: g.items.map((i) => i.id === itemId ? { ...i, label } : i) } : g) });
+  }
 
   const sidebarBlocks = site.blocks.filter((b): b is Extract<SiteBlock, { type: 'sidebar' }> => b.type === 'sidebar');
   const mainBlocks = site.blocks.filter((b) => b.type !== 'sidebar');
@@ -296,14 +311,27 @@ export default function SitePreview({ site, page, messages, activeBlockId, onSel
     <>
       <div className={`site-preview theme-${site.theme}`} style={previewStyle}>
         <header>
-          {site.logo
-            ? <img src={site.logo} alt={site.name} className="site-logo" />
-            : <strong>{site.name}</strong>
-          }
+          <div className="preview-header-brand">
+            {site.logo
+              ? (
+                <div className="preview-logo-group">
+                  <img src={site.logo} alt={site.name} className="site-logo" />
+                  <button className="preview-logo-clear" title="Remove logo" onClick={() => onUpdateSite({ logo: '' })}>×</button>
+                </div>
+              )
+              : (
+                <strong><EditableText value={site.name} onChange={(name) => onUpdateSite({ name })} /></strong>
+              )
+            }
+            <button className="preview-logo-upload-btn" title="Upload logo" onClick={() => logoUploadRef.current?.click()}>↑ logo</button>
+            <input ref={logoUploadRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoUpload} />
+          </div>
           {headerNav && (
             <nav>
               {headerNav.items.map((item) => (
-                <a key={item.id} href={item.href} onClick={(e) => e.preventDefault()}>{item.label}</a>
+                <a key={item.id} href={item.href} onClick={(e) => e.preventDefault()}>
+                  <EditableText value={item.label} onChange={(label) => updateNavItem(headerNav.id, item.id, label)} />
+                </a>
               ))}
             </nav>
           )}
@@ -323,7 +351,9 @@ export default function SitePreview({ site, page, messages, activeBlockId, onSel
             <span style={{ fontSize: 13, color: 'var(--preview-muted)' }}>{site.name}</span>
             <nav>
               {footerNav.items.map((item) => (
-                <a key={item.id} href={item.href} onClick={(e) => e.preventDefault()}>{item.label}</a>
+                <a key={item.id} href={item.href} onClick={(e) => e.preventDefault()}>
+                  <EditableText value={item.label} onChange={(label) => updateNavItem(footerNav.id, item.id, label)} />
+                </a>
               ))}
             </nav>
           </footer>
