@@ -16,16 +16,19 @@ import {
   createBlock,
   googleFonts,
   initialSite,
+  socialPlatforms,
   themes,
 } from './lib/site';
+import { generateHtml } from './lib/htmlExport';
 
 const storageKey = 'astro-site-builder-content';
 const localeStorageKey = 'astro-site-builder-locale';
-const blockTypes: BlockType[] = ['hero', 'services', 'portfolio', 'gallery', 'video', 'testimonials', 'faq', 'form', 'contact', 'sidebar', 'pricing', 'team', 'cta', 'html'];
+const blockTypes: BlockType[] = ['hero', 'services', 'portfolio', 'gallery', 'video', 'testimonials', 'faq', 'form', 'contact', 'sidebar', 'pricing', 'team', 'cta', 'html', 'stats', 'social', 'timeline'];
 const menuItems = ['content', 'design', 'seo', 'export'] as const;
 
 type MenuItem = (typeof menuItems)[number];
 type EditorTab = 'content' | 'style' | 'animation';
+type PreviewMode = 'desktop' | 'mobile';
 
 function loadSite(): SiteContent {
   const saved = localStorage.getItem(storageKey);
@@ -424,6 +427,58 @@ function BlockContentEditor({ block, updateBlock, t }: { block: SiteBlock; updat
     </>
   );
 
+  if (block.type === 'stats') return (
+    <>
+      <EditorHeader title={t('block.stats')} hint={t('editorHint.stats')} />
+      <Field label={t('field.title')} value={block.title} onChange={(title) => updateBlock(block.id, { title })} />
+      {block.items.map((item, index) => (
+        <div className="repeat-row" key={index}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <Field label={t('field.statValue')} value={item.value} onChange={(value) => { const items = [...block.items]; items[index] = { ...item, value }; updateBlock(block.id, { items }); }} />
+            <Field label={t('field.statSuffix')} value={item.suffix} onChange={(suffix) => { const items = [...block.items]; items[index] = { ...item, suffix }; updateBlock(block.id, { items }); }} />
+          </div>
+          <Field label={t('field.statLabel')} value={item.label} onChange={(label) => { const items = [...block.items]; items[index] = { ...item, label }; updateBlock(block.id, { items }); }} />
+        </div>
+      ))}
+      <button className="soft-button" onClick={() => updateBlock(block.id, { items: [...block.items, { value: '0', label: 'Label', suffix: '' }] })}>{t('action.addItem')}</button>
+    </>
+  );
+
+  if (block.type === 'social') return (
+    <>
+      <EditorHeader title={t('block.social')} hint={t('editorHint.social')} />
+      <Field label={t('field.title')} value={block.title} onChange={(title) => updateBlock(block.id, { title })} />
+      {block.items.map((item, index) => (
+        <div className="repeat-row" key={index}>
+          <div className="field">
+            <span>{t('field.socialPlatform')}</span>
+            <select value={item.platform} onChange={(e) => { const items = [...block.items]; items[index] = { ...item, platform: e.target.value }; updateBlock(block.id, { items }); }}>
+              {socialPlatforms.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+            </select>
+          </div>
+          <Field label={t('field.socialUrl')} value={item.url} onChange={(url) => { const items = [...block.items]; items[index] = { ...item, url }; updateBlock(block.id, { items }); }} placeholder="https://" />
+          <Field label={t('field.name')} value={item.label} onChange={(label) => { const items = [...block.items]; items[index] = { ...item, label }; updateBlock(block.id, { items }); }} />
+        </div>
+      ))}
+      <button className="soft-button" onClick={() => updateBlock(block.id, { items: [...block.items, { platform: 'telegram', url: 'https://t.me/', label: 'Telegram' }] })}>{t('action.addItem')}</button>
+    </>
+  );
+
+  if (block.type === 'timeline') return (
+    <>
+      <EditorHeader title={t('block.timeline')} hint={t('editorHint.timeline')} />
+      <Field label={t('field.title')} value={block.title} onChange={(title) => updateBlock(block.id, { title })} />
+      {block.items.map((item, index) => (
+        <div className="repeat-row" key={index}>
+          <Field label={t('field.timelineYear')} value={item.year} onChange={(year) => { const items = [...block.items]; items[index] = { ...item, year }; updateBlock(block.id, { items }); }} />
+          <Field label={t('field.timelineTitle')} value={item.title} onChange={(title) => { const items = [...block.items]; items[index] = { ...item, title }; updateBlock(block.id, { items }); }} />
+          <Field label={t('field.text')} value={item.text} textarea onChange={(text) => { const items = [...block.items]; items[index] = { ...item, text }; updateBlock(block.id, { items }); }} />
+        </div>
+      ))}
+      <button className="soft-button" onClick={() => updateBlock(block.id, { items: [...block.items, { year: '2025', title: 'New milestone', text: 'Description.' }] })}>{t('action.addItem')}</button>
+    </>
+  );
+
   const itemLabels = block.type === 'services' ? [t('field.title'), t('field.text')] : block.type === 'testimonials' ? [t('field.name'), t('field.text')] : [t('field.question'), t('field.answer')];
   return (
     <>
@@ -475,6 +530,7 @@ export default function App() {
   const [activePageId, setActivePageId] = useState(site.pages[0]?.id ?? 'home');
   const [activeMenu, setActiveMenu] = useState<MenuItem>('content');
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
+  const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -573,6 +629,18 @@ export default function App() {
     const link = document.createElement('a');
     link.href = url;
     link.download = 'site.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportHtml() {
+    if (!activePage) return;
+    const html = generateHtml(site, activePage);
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${activePage.slug || 'index'}.html`;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -785,7 +853,8 @@ export default function App() {
             <div className="panel export-card">
               <h2>{t('export.title')}</h2>
               <p>{t('export.text')}</p>
-              <button className="primary" onClick={downloadJson}>{t('action.downloadJson')}</button>
+              <button className="primary" onClick={exportHtml}>{t('action.exportHtml')}</button>
+              <button className="soft-button" onClick={downloadJson}>{t('action.downloadJson')}</button>
               <button className="soft-button" onClick={restoreDemo}>{t('action.restoreDemo')}</button>
             </div>
             <details className="panel json-panel">
@@ -803,7 +872,12 @@ export default function App() {
             <h2>{t('section.preview')}</h2>
             <span>{t('preview.help')}</span>
           </div>
-          <button onClick={() => setPreviewCollapsed(true)}>{t('action.collapse')}</button>
+          <div className="preview-toolbar-actions">
+            <button className={previewMode === 'mobile' ? 'active' : ''} onClick={() => setPreviewMode((m) => m === 'mobile' ? 'desktop' : 'mobile')}>
+              {previewMode === 'mobile' ? t('preview.desktop') : t('preview.mobile')}
+            </button>
+            <button onClick={() => setPreviewCollapsed(true)}>{t('action.collapse')}</button>
+          </div>
         </div>
         {activePage && (
           <SitePreview
@@ -814,6 +888,7 @@ export default function App() {
             onSelectBlock={setSelectedId}
             onUpdateBlock={updateBlock}
             onUpdateSite={(patch) => updateSite({ ...site, ...patch })}
+            previewMode={previewMode}
           />
         )}
       </aside>

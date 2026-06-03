@@ -194,5 +194,21 @@
   "field.bio": "Биография",
   "field.buttonLabel": "Текст кнопки",
   "field.buttonHref": "Ссылка кнопки (href)",
-  "field.htmlCode": "HTML / embed-код"
+  "field.htmlCode": "HTML / embed-код",
+  "block.stats": "цифры",
+  "block.social": "соцсети",
+  "block.timeline": "история",
+  "editorHint.stats": "Покажите ключевые показатели: клиентов, лет работы, конверсию и т.д.",
+  "editorHint.social": "Ссылки на ваши профили в социальных сетях.",
+  "editorHint.timeline": "Расскажите историю бренда вертикальной лентой событий.",
+  "field.statValue": "Число",
+  "field.statSuffix": "Суффикс (+, % и т.д.)",
+  "field.statLabel": "Подпись",
+  "field.socialPlatform": "Платформа",
+  "field.socialUrl": "URL",
+  "field.timelineYear": "Год / дата",
+  "field.timelineTitle": "Заголовок события",
+  "action.exportHtml": "Экспорт HTML",
+  "preview.mobile": "Мобильный",
+  "preview.desktop": "Десктоп"
 }

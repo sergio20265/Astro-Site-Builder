@@ -1,5 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react';
 import type { BlockAnimation, BlockStyle, PageContent, SiteBlock, SiteContent } from '../lib/site';
+import { socialPlatforms } from '../lib/site';
 import type { MessageKey, Messages } from '../lib/i18n';
 import { translate } from '../lib/i18n';
 
@@ -11,6 +12,7 @@ type Props = {
   onSelectBlock: (id: string) => void;
   onUpdateBlock: (id: string, patch: Partial<SiteBlock>) => void;
   onUpdateSite: (patch: Partial<SiteContent>) => void;
+  previewMode?: 'desktop' | 'mobile';
 };
 
 function AnimationWrapper({ animation, children }: { animation?: BlockAnimation; children: React.ReactNode }) {
@@ -315,10 +317,61 @@ function BlockView({ block, messages, active, onSelect, onUpdateBlock, onOpenLig
         <div dangerouslySetInnerHTML={{ __html: block.code }} />
       </section>
     );
+
+    case 'stats': return (
+      <section className={`${shellClass} preview-section ${padClass}`} style={blockStyle} onClick={onSelect}>
+        <h2><EditableText value={block.title} onChange={(title) => onUpdateBlock(block.id, { title })} /></h2>
+        <div className="stats-grid">
+          {block.items.map((item, index) => (
+            <div key={index} className="stats-item">
+              <div className="stats-value">
+                <EditableText value={item.value} onChange={(value) => { const items = [...block.items]; items[index] = { ...item, value }; onUpdateBlock(block.id, { items }); }} />
+                <EditableText value={item.suffix} onChange={(suffix) => { const items = [...block.items]; items[index] = { ...item, suffix }; onUpdateBlock(block.id, { items }); }} />
+              </div>
+              <div className="stats-label">
+                <EditableText value={item.label} onChange={(label) => { const items = [...block.items]; items[index] = { ...item, label }; onUpdateBlock(block.id, { items }); }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+
+    case 'social': return (
+      <section className={`${shellClass} preview-section ${padClass}`} style={blockStyle} onClick={onSelect}>
+        <h2><EditableText value={block.title} onChange={(title) => onUpdateBlock(block.id, { title })} /></h2>
+        <div className="social-bar">
+          {block.items.map((item, index) => {
+            const plat = socialPlatforms.find((p) => p.value === item.platform);
+            return (
+              <a key={index} href={item.url} className="social-link" onClick={(e) => e.preventDefault()}>
+                <span className="social-short">{plat?.short ?? '?'}</span>
+                <EditableText value={item.label || plat?.label || item.platform} onChange={(label) => { const items = [...block.items]; items[index] = { ...item, label }; onUpdateBlock(block.id, { items }); }} />
+              </a>
+            );
+          })}
+        </div>
+      </section>
+    );
+
+    case 'timeline': return (
+      <section className={`${shellClass} preview-section ${padClass}`} style={blockStyle} onClick={onSelect}>
+        <h2><EditableText value={block.title} onChange={(title) => onUpdateBlock(block.id, { title })} /></h2>
+        <div className="timeline-list">
+          {block.items.map((item, index) => (
+            <div key={index} className="timeline-item">
+              <div className="timeline-year"><EditableText value={item.year} onChange={(year) => { const items = [...block.items]; items[index] = { ...item, year }; onUpdateBlock(block.id, { items }); }} /></div>
+              <div className="timeline-title"><EditableText value={item.title} onChange={(title) => { const items = [...block.items]; items[index] = { ...item, title }; onUpdateBlock(block.id, { items }); }} /></div>
+              <div className="timeline-text"><EditableText multiline value={item.text} onChange={(text) => { const items = [...block.items]; items[index] = { ...item, text }; onUpdateBlock(block.id, { items }); }} /></div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
   }
 }
 
-export default function SitePreview({ site, page, messages, activeBlockId, onSelectBlock, onUpdateBlock, onUpdateSite }: Props) {
+export default function SitePreview({ site, page, messages, activeBlockId, onSelectBlock, onUpdateBlock, onUpdateSite, previewMode }: Props) {
   const [lightbox, setLightbox] = useState<{ src: string; caption: string } | null>(null);
   const logoUploadRef = useRef<HTMLInputElement>(null);
 
@@ -377,10 +430,9 @@ export default function SitePreview({ site, page, messages, activeBlockId, onSel
     );
   }
 
-  return (
-    <>
-      <div className={`site-preview theme-${site.theme}`} style={previewStyle}>
-        <header>
+  const previewContent = (
+    <div className={`site-preview theme-${site.theme}`} style={previewStyle}>
+      <header>
           <div className="preview-header-brand">
             {site.logo
               ? (
@@ -428,8 +480,14 @@ export default function SitePreview({ site, page, messages, activeBlockId, onSel
             </nav>
           </footer>
         )}
-      </div>
+    </div>
+  );
 
+  return (
+    <>
+      {previewMode === 'mobile'
+        ? <div className="preview-phone-wrap">{previewContent}</div>
+        : previewContent}
       {lightbox && (
         <button className="lightbox" onClick={() => setLightbox(null)}>
           <img src={lightbox.src} alt={lightbox.caption} />

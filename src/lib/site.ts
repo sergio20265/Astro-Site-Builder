@@ -1,5 +1,5 @@
 export type ThemeId = 'moss' | 'ink' | 'rose' | 'night' | 'cream' | 'ocean';
-export type BlockType = 'hero' | 'services' | 'portfolio' | 'gallery' | 'video' | 'testimonials' | 'faq' | 'form' | 'contact' | 'sidebar' | 'pricing' | 'team' | 'cta' | 'html';
+export type BlockType = 'hero' | 'services' | 'portfolio' | 'gallery' | 'video' | 'testimonials' | 'faq' | 'form' | 'contact' | 'sidebar' | 'pricing' | 'team' | 'cta' | 'html' | 'stats' | 'social' | 'timeline';
 export type AnimationType = 'none' | 'fade' | 'slide-up' | 'slide-left' | 'slide-right' | 'zoom';
 export type PaddingSize = 'compact' | 'normal' | 'spacious';
 
@@ -76,7 +76,10 @@ export type SiteBlock =
   | { id: string; type: 'pricing'; title: string; items: Array<{ name: string; price: string; period: string; features: string; highlight: boolean }>; style?: BlockStyle; animation?: BlockAnimation }
   | { id: string; type: 'team'; title: string; items: Array<{ name: string; role: string; bio: string; image: string }>; style?: BlockStyle; animation?: BlockAnimation }
   | { id: string; type: 'cta'; title: string; text: string; buttonLabel: string; buttonHref: string; style?: BlockStyle; animation?: BlockAnimation }
-  | { id: string; type: 'html'; title: string; code: string; style?: BlockStyle; animation?: BlockAnimation };
+  | { id: string; type: 'html'; title: string; code: string; style?: BlockStyle; animation?: BlockAnimation }
+  | { id: string; type: 'stats'; title: string; items: Array<{ value: string; label: string; suffix: string }>; style?: BlockStyle; animation?: BlockAnimation }
+  | { id: string; type: 'social'; title: string; items: Array<{ platform: string; url: string; label: string }>; style?: BlockStyle; animation?: BlockAnimation }
+  | { id: string; type: 'timeline'; title: string; items: Array<{ year: string; title: string; text: string }>; style?: BlockStyle; animation?: BlockAnimation };
 
 export type SiteContent = {
   name: string;
@@ -130,6 +133,20 @@ export const themes: Record<ThemeId, { name: string; colors: string[]; descripti
     description: 'Clean coastal palette for travel, wellness and lifestyle.',
   },
 };
+
+export const socialPlatforms = [
+  { value: 'telegram', label: 'Telegram', short: 'TG' },
+  { value: 'instagram', label: 'Instagram', short: 'IG' },
+  { value: 'vk', label: 'VK', short: 'VK' },
+  { value: 'youtube', label: 'YouTube', short: 'YT' },
+  { value: 'tiktok', label: 'TikTok', short: 'TT' },
+  { value: 'twitter', label: 'X / Twitter', short: 'X' },
+  { value: 'facebook', label: 'Facebook', short: 'FB' },
+  { value: 'linkedin', label: 'LinkedIn', short: 'in' },
+  { value: 'github', label: 'GitHub', short: 'GH' },
+  { value: 'whatsapp', label: 'WhatsApp', short: 'WA' },
+  { value: 'custom', label: 'Custom', short: '\u{1F517}' },
+];
 
 export const googleFonts = [
   { value: '', label: 'System default' },
@@ -223,5 +240,20 @@ export function createBlock(type: BlockType): SiteBlock {
     case 'team': return { id, type, title: 'Our Team', items: [{ name: 'Team Member', role: 'Role / Position', bio: 'Short bio about this person.', image: '' }] };
     case 'cta': return { id, type, title: 'Ready to get started?', text: 'Join thousands of happy customers today.', buttonLabel: 'Get started', buttonHref: '#contact' };
     case 'html': return { id, type, title: 'Embed / Custom HTML', code: '<p>Your HTML, iframe or script goes here.</p>' };
+    case 'stats': return { id, type, title: 'Stats', items: [
+      { value: '1000', label: 'Clients', suffix: '+' },
+      { value: '5', label: 'Years', suffix: '' },
+      { value: '98', label: 'Satisfaction', suffix: '%' },
+    ]};
+    case 'social': return { id, type, title: 'Follow us', items: [
+      { platform: 'telegram', url: 'https://t.me/', label: 'Telegram' },
+      { platform: 'instagram', url: 'https://instagram.com/', label: 'Instagram' },
+      { platform: 'vk', url: 'https://vk.com/', label: 'VK' },
+    ]};
+    case 'timeline': return { id, type, title: 'Our story', items: [
+      { year: '2020', title: 'Founded', text: 'The studio was born in a small corner of the city.' },
+      { year: '2022', title: 'Expanded', text: 'We grew from 2 to 8 team members.' },
+      { year: '2024', title: 'Today', text: 'Serving 500+ clients across the region.' },
+    ]};
   }
 }

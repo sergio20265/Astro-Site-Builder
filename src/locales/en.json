@@ -194,5 +194,21 @@
   "field.bio": "Bio",
   "field.buttonLabel": "Button text",
   "field.buttonHref": "Button link (href)",
-  "field.htmlCode": "HTML / embed code"
+  "field.htmlCode": "HTML / embed code",
+  "block.stats": "stats",
+  "block.social": "social",
+  "block.timeline": "timeline",
+  "editorHint.stats": "Show key numbers: clients, years, conversion rate, etc.",
+  "editorHint.social": "Link to your social media profiles with branded chips.",
+  "editorHint.timeline": "Tell your story with a vertical timeline of milestones.",
+  "field.statValue": "Number",
+  "field.statSuffix": "Suffix (+, %, etc.)",
+  "field.statLabel": "Label",
+  "field.socialPlatform": "Platform",
+  "field.socialUrl": "URL",
+  "field.timelineYear": "Year / date",
+  "field.timelineTitle": "Milestone title",
+  "action.exportHtml": "Export HTML",
+  "preview.mobile": "Mobile",
+  "preview.desktop": "Desktop"
 }
