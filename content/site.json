@@ -96,6 +96,12 @@
       "id": "portfolio-page",
       "title": "Portfolio",
       "slug": "portfolio",
+      "seo": {
+        "title": "Portfolio - Moon Fern Studio",
+        "description": "Selected floral styling projects, workshops and atmospheric botanical setups by Moon Fern Studio.",
+        "image": "https://images.unsplash.com/photo-1526047932273-341f2a7631f9",
+        "keywords": "floral portfolio, styling projects, botanical events"
+      },
       "blocks": [
         {
           "id": "portfolio-page-hero",

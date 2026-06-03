@@ -19,13 +19,19 @@ const themeCss = `
 
 const layout = `---
 const { site, page } = Astro.props;
+const pageSeo = {
+  title: page.seo?.title || (page.title === 'Home' ? site.seo.title : \`\${page.title} - \${site.name}\`),
+  description: page.seo?.description || site.seo.description,
+  image: page.seo?.image || site.seo.image,
+  keywords: page.seo?.keywords || site.seo.keywords,
+};
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
   name: site.name,
   url: site.baseUrl,
-  image: site.seo.image,
-  description: site.seo.description,
+  image: pageSeo.image,
+  description: pageSeo.description,
 };
 
 function hrefFor(slug) {
@@ -37,12 +43,12 @@ function hrefFor(slug) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{page.title === 'Home' ? site.seo.title : \`\${page.title} - \${site.name}\`}</title>
-    <meta name="description" content={site.seo.description} />
-    <meta name="keywords" content={site.seo.keywords} />
-    <meta property="og:title" content={site.seo.title} />
-    <meta property="og:description" content={site.seo.description} />
-    <meta property="og:image" content={site.seo.image} />
+    <title>{pageSeo.title}</title>
+    <meta name="description" content={pageSeo.description} />
+    <meta name="keywords" content={pageSeo.keywords} />
+    <meta property="og:title" content={pageSeo.title} />
+    <meta property="og:description" content={pageSeo.description} />
+    <meta property="og:image" content={pageSeo.image} />
     <script type="application/ld+json" set:html={JSON.stringify(schema)} />
   </head>
   <body class={\`theme-\${site.theme}\`}>

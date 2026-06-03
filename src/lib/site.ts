@@ -37,6 +37,13 @@ export type NavGroup = {
   items: NavItem[];
 };
 
+export type PageSeo = {
+  title?: string;
+  description?: string;
+  image?: string;
+  keywords?: string;
+};
+
 export type PageContent = {
   id: string;
   title: string;
@@ -44,6 +51,7 @@ export type PageContent = {
   blocks: SiteBlock[];
   bgColor?: string;
   bgImage?: string;
+  seo?: PageSeo;
 };
 
 export type SiteBlock =
@@ -152,7 +160,18 @@ export const initialSite: SiteContent = {
 
 initialSite.pages = [
   { id: 'home', title: 'Home', slug: '/', blocks: initialSite.blocks },
-  { id: 'portfolio-page', title: 'Portfolio', slug: 'portfolio', blocks: [initialSite.blocks.find((b) => b.type === 'hero')!, initialSite.blocks.find((b) => b.type === 'portfolio')!, initialSite.blocks.find((b) => b.type === 'contact')!] },
+  {
+    id: 'portfolio-page',
+    title: 'Portfolio',
+    slug: 'portfolio',
+    seo: {
+      title: 'Portfolio - Moon Fern Studio',
+      description: 'Selected floral styling projects, workshops and atmospheric botanical setups by Moon Fern Studio.',
+      image: 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9',
+      keywords: 'floral portfolio, styling projects, botanical events',
+    },
+    blocks: [initialSite.blocks.find((b) => b.type === 'hero')!, initialSite.blocks.find((b) => b.type === 'portfolio')!, initialSite.blocks.find((b) => b.type === 'contact')!],
+  },
 ];
 
 export function createBlock(type: BlockType): SiteBlock {

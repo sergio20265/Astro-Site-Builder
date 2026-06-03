@@ -256,6 +256,13 @@ button:disabled {
   color: var(--sb-text);
 }
 
+.panel-note {
+  margin: -4px 0 12px;
+  color: var(--sb-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
 /* ===== WORKSPACE ===== */
 .workspace {
   padding: 22px 24px;
@@ -592,6 +599,13 @@ button:disabled {
   margin: 0;
   font-size: 13px;
   font-weight: 700;
+}
+
+.mini-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
 }
 
 .mini-header button {

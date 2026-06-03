@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+﻿import { useMemo, useRef, useState } from 'react';
 import SitePreview from './components/SitePreview';
 import { type Locale, type MessageKey, dictionaries, translate } from './lib/i18n';
 import {
@@ -59,7 +59,7 @@ function Field({ label, value, onChange, textarea = false, placeholder }: { labe
   );
 }
 
-function ImageField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function ImageField({ label, value, onChange, t }: { label: string; value: string; onChange: (v: string) => void; t: (key: MessageKey) => string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const isData = value.startsWith('data:');
 
@@ -76,29 +76,29 @@ function ImageField({ label, value, onChange }: { label: string; value: string; 
     <div className="field">
       <span>{label}</span>
       <div className="image-field-row">
-        <input value={isData ? '' : value} onChange={(e) => onChange(e.target.value)} placeholder={isData ? '[local file]' : 'https://...'} readOnly={isData} />
-        <button type="button" className="upload-btn" onClick={() => fileRef.current?.click()}>↑ Upload</button>
+        <input value={isData ? '' : value} onChange={(e) => onChange(e.target.value)} placeholder={isData ? t('placeholder.localFile') : 'https://...'} readOnly={isData} />
+        <button type="button" className="upload-btn" onClick={() => fileRef.current?.click()}>^ {t('field.upload')}</button>
         <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
       </div>
       {value && (
         <div className="image-thumb-wrap">
           <img src={value} alt="" className="image-thumb" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-          <div className="image-thumb-info"><span>{isData ? 'Local file (base64)' : value}</span></div>
-          <button type="button" className="image-clear-btn" onClick={() => onChange('')}>×</button>
+          <div className="image-thumb-info"><span>{isData ? t('image.localBase64') : value}</span></div>
+          <button type="button" className="image-clear-btn" aria-label={t('action.clear')} onClick={() => onChange('')}>x</button>
         </div>
       )}
     </div>
   );
 }
 
-function ColorField({ label, value, onChange, placeholder = 'default' }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+function ColorField({ label, value, onChange, placeholder = 'default', clearLabel }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; clearLabel?: string }) {
   return (
     <div className="field">
       <span>{label}</span>
       <div className="color-row">
         <input type="color" value={value || '#ffffff'} onChange={(e) => onChange(e.target.value)} />
         <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
-        {value && <button type="button" onClick={() => onChange('')}>×</button>}
+        {value && <button type="button" aria-label={clearLabel} onClick={() => onChange('')}>x</button>}
       </div>
     </div>
   );
@@ -109,11 +109,11 @@ function StyleEditor({ block, updateBlock, t }: { block: SiteBlock; updateBlock:
   function patch(p: Partial<BlockStyle>) { updateBlock(block.id, { style: { ...s, ...p } } as Partial<SiteBlock>); }
   return (
     <>
-      <div className="editor-header"><h2>{t('tab.style')}</h2><p>Customize colors, background and spacing for this block.</p></div>
-      <ColorField label={t('field.bgColor')} value={s.bgColor ?? ''} onChange={(bgColor) => patch({ bgColor })} />
-      <ImageField label={t('field.bgImage')} value={s.bgImage ?? ''} onChange={(bgImage) => patch({ bgImage })} />
-      <ColorField label={t('field.textColor')} value={s.textColor ?? ''} onChange={(textColor) => patch({ textColor })} placeholder="inherit" />
-      <ColorField label={t('field.accentColor')} value={s.accentColor ?? ''} onChange={(accentColor) => patch({ accentColor })} placeholder="theme default" />
+      <div className="editor-header"><h2>{t('tab.style')}</h2><p>{t('style.help')}</p></div>
+      <ColorField label={t('field.bgColor')} value={s.bgColor ?? ''} onChange={(bgColor) => patch({ bgColor })} clearLabel={t('action.clear')} />
+      <ImageField label={t('field.bgImage')} value={s.bgImage ?? ''} onChange={(bgImage) => patch({ bgImage })} t={t} />
+      <ColorField label={t('field.textColor')} value={s.textColor ?? ''} onChange={(textColor) => patch({ textColor })} placeholder={t('placeholder.inherit')} clearLabel={t('action.clear')} />
+      <ColorField label={t('field.accentColor')} value={s.accentColor ?? ''} onChange={(accentColor) => patch({ accentColor })} placeholder={t('placeholder.themeDefault')} clearLabel={t('action.clear')} />
       <div className="field">
         <span>{t('field.paddingY')}</span>
         <select value={s.paddingY ?? 'normal'} onChange={(e) => patch({ paddingY: e.target.value as PaddingSize })}>
@@ -132,7 +132,7 @@ function AnimationEditor({ block, updateBlock, t }: { block: SiteBlock; updateBl
   const animTypes: AnimationType[] = ['none', 'fade', 'slide-up', 'slide-left', 'slide-right', 'zoom'];
   return (
     <>
-      <div className="editor-header"><h2>{t('tab.animation')}</h2><p>Animate this block when it enters the viewport on scroll.</p></div>
+      <div className="editor-header"><h2>{t('tab.animation')}</h2><p>{t('animation.help')}</p></div>
       <div className="field">
         <span>{t('field.animType')}</span>
         <select value={anim.type} onChange={(e) => patch({ type: e.target.value as AnimationType })}>
@@ -220,9 +220,9 @@ function NavEditor({ site, updateSite, t }: { site: SiteContent; updateSite: (s:
               <Field label={t('field.navLabel')} value={item.label} onChange={(label) => updateItem(group.id, item.id, { label })} />
               <Field label={t('field.navHref')} value={item.href} onChange={(href) => updateItem(group.id, item.id, { href })} />
               <div className="nav-item-actions">
-                <button onClick={() => moveItem(group.id, index, -1)} disabled={index === 0}>↑</button>
-                <button onClick={() => moveItem(group.id, index, 1)} disabled={index === group.items.length - 1}>↓</button>
-                <button className="danger-button" onClick={() => removeItem(group.id, item.id)}>×</button>
+                <button onClick={() => moveItem(group.id, index, -1)} disabled={index === 0}>{t('action.up')}</button>
+                <button onClick={() => moveItem(group.id, index, 1)} disabled={index === group.items.length - 1}>{t('action.down')}</button>
+                <button className="danger-button" onClick={() => removeItem(group.id, item.id)}>{t('action.delete')}</button>
               </div>
             </div>
           ))}
@@ -256,7 +256,7 @@ function BlockContentEditor({ block, updateBlock, t }: { block: SiteBlock; updat
       <Field label={t('field.title')} value={block.title} onChange={(title) => updateBlock(block.id, { title })} />
       <Field label={t('field.subtitle')} value={block.subtitle} textarea onChange={(subtitle) => updateBlock(block.id, { subtitle })} />
       <Field label={t('field.cta')} value={block.cta} onChange={(cta) => updateBlock(block.id, { cta })} />
-      <ImageField label={t('field.imageUrl')} value={block.image} onChange={(image) => updateBlock(block.id, { image })} />
+      <ImageField label={t('field.imageUrl')} value={block.image} onChange={(image) => updateBlock(block.id, { image })} t={t} />
     </>
   );
 
@@ -277,7 +277,7 @@ function BlockContentEditor({ block, updateBlock, t }: { block: SiteBlock; updat
       <Field label={t('field.title')} value={block.title} onChange={(title) => updateBlock(block.id, { title })} />
       {block.images.map((image, index) => (
         <div className="repeat-row" key={index}>
-          <ImageField label={t('field.imageUrl')} value={image.src} onChange={(src) => { const images = [...block.images]; images[index] = { ...image, src }; updateBlock(block.id, { images }); }} />
+          <ImageField label={t('field.imageUrl')} value={image.src} onChange={(src) => { const images = [...block.images]; images[index] = { ...image, src }; updateBlock(block.id, { images }); }} t={t} />
           <Field label={t('field.caption')} value={image.caption} onChange={(caption) => { const images = [...block.images]; images[index] = { ...image, caption }; updateBlock(block.id, { images }); }} />
         </div>
       ))}
@@ -293,7 +293,7 @@ function BlockContentEditor({ block, updateBlock, t }: { block: SiteBlock; updat
         <div className="repeat-row" key={index}>
           <Field label={t('field.title')} value={item.title} onChange={(title) => { const items = [...block.items]; items[index] = { ...item, title }; updateBlock(block.id, { items }); }} />
           <Field label={t('field.category')} value={item.category} onChange={(category) => { const items = [...block.items]; items[index] = { ...item, category }; updateBlock(block.id, { items }); }} />
-          <ImageField label={t('field.imageUrl')} value={item.image} onChange={(image) => { const items = [...block.items]; items[index] = { ...item, image }; updateBlock(block.id, { items }); }} />
+          <ImageField label={t('field.imageUrl')} value={item.image} onChange={(image) => { const items = [...block.items]; items[index] = { ...item, image }; updateBlock(block.id, { items }); }} t={t} />
           <Field label={t('field.text')} value={item.text} textarea onChange={(text) => { const items = [...block.items]; items[index] = { ...item, text }; updateBlock(block.id, { items }); }} />
         </div>
       ))}
@@ -360,7 +360,7 @@ function BlockContentEditor({ block, updateBlock, t }: { block: SiteBlock; updat
               <option value="links">{t('sidebarWidget.links')}</option>
             </select>
           </div>
-          <Field label={widget.kind === 'links' ? `${t('field.widgetBody')} (Label | URL per line)` : t('field.widgetBody')} value={widget.body} textarea onChange={(body) => { const widgets = [...block.widgets]; widgets[index] = { ...widget, body }; updateBlock(block.id, { widgets }); }} />
+          <Field label={widget.kind === 'links' ? `${t('field.widgetBody')} (${t('sidebar.linksFormat')})` : t('field.widgetBody')} value={widget.body} textarea onChange={(body) => { const widgets = [...block.widgets]; widgets[index] = { ...widget, body }; updateBlock(block.id, { widgets }); }} />
         </div>
       ))}
       <button className="soft-button" onClick={() => { const w: SidebarWidget = { id: `w-${crypto.randomUUID().slice(0, 8)}`, kind: 'text', heading: 'Widget', body: 'Widget content.' }; updateBlock(block.id, { widgets: [...block.widgets, w] }); }}>{t('action.addWidget')}</button>
@@ -388,13 +388,25 @@ function EditorHeader({ title, hint }: { title: string; hint: string }) {
   return <div className="editor-header"><h2>{title}</h2><p>{hint}</p></div>;
 }
 
-function SeoCard({ site }: { site: SiteContent }) {
+function getPageSeo(site: SiteContent, page?: PageContent) {
+  const fallbackTitle = page && page.title !== 'Home' ? `${page.title} - ${site.name}` : site.seo.title;
+  return {
+    title: page?.seo?.title || fallbackTitle,
+    description: page?.seo?.description || site.seo.description,
+    image: page?.seo?.image || site.seo.image,
+    keywords: page?.seo?.keywords || site.seo.keywords,
+  };
+}
+
+function SeoCard({ site, page, t }: { site: SiteContent; page?: PageContent; t: (key: MessageKey) => string }) {
+  const seo = getPageSeo(site, page);
+
   return (
     <div className="panel search-card">
-      <span>Search preview</span>
-      <strong>{site.seo.title}</strong>
+      <span>{t('seo.searchPreview')}</span>
+      <strong>{seo.title}</strong>
       <small>{site.baseUrl}</small>
-      <p>{site.seo.description}</p>
+      <p>{seo.description}</p>
     </div>
   );
 }
@@ -446,6 +458,18 @@ export default function App() {
     updateSite({ ...site, pages: [...site.pages, page] });
     setActivePageId(page.id);
     setSelectedId(page.blocks[0].id);
+  }
+
+  function removeActivePage() {
+    if (!activePage || site.pages.length <= 1) return;
+
+    const pageIndex = site.pages.findIndex((page) => page.id === activePage.id);
+    const pages = site.pages.filter((page) => page.id !== activePage.id);
+    const nextPage = pages[Math.max(0, Math.min(pageIndex, pages.length - 1))];
+
+    updateSite({ ...site, pages });
+    setActivePageId(nextPage.id);
+    setSelectedId(nextPage.blocks[0]?.id ?? '');
   }
 
   function reorderBlocks(fromId: string, toId: string) {
@@ -504,12 +528,12 @@ export default function App() {
       {sidebarOpen && <div className="sidebar-backdrop" onClick={closeSidebar} />}
 
       <aside className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
-        <button className="sidebar-close-btn" onClick={closeSidebar}>✕</button>
+        <button className="sidebar-close-btn" aria-label={t('aria.closeMenu')} onClick={closeSidebar}>x</button>
         <div className="brand">
           <img src="/weblogo.jpg" className="brand-logo-img" alt="" />
 
         </div>
-        <nav className="app-menu" aria-label="Builder sections">
+        <nav className="app-menu" aria-label={t('aria.builderSections')}>
           {menuItems.map((item) => (
             <button className={activeMenu === item ? 'active' : ''} key={item} onClick={() => { setActiveMenu(item); closeSidebar(); }}>
               {t(`menu.${item}` as MessageKey)}
@@ -528,7 +552,7 @@ export default function App() {
       <main className="workspace">
         <section className="topbar">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button className="hamburger-btn" onClick={() => setSidebarOpen(true)} aria-label="Open menu">☰</button>
+            <button className="hamburger-btn" onClick={() => setSidebarOpen(true)} aria-label={t('aria.openMenu')}>{'\u2630'}</button>
             <div>
               <h2>{t(`menu.${activeMenu}` as MessageKey)}</h2>
               <p>{activeMenu === 'content' ? t('blocks.saved', { count: currentBlocks.length }) : t(`menuHelp.${activeMenu}` as MessageKey)}</p>
@@ -545,7 +569,12 @@ export default function App() {
               <div className="page-panel panel">
                 <div className="mini-header">
                   <h2>{t('section.pages')}</h2>
-                  <button onClick={addPage}>{t('action.addPage')}</button>
+                  <div className="mini-actions">
+                    <button onClick={addPage}>{t('action.addPage')}</button>
+                    <button className="danger-button" onClick={removeActivePage} disabled={site.pages.length <= 1}>
+                      {t('action.deletePage')}
+                    </button>
+                  </div>
                 </div>
                 <div className="page-tabs">
                   {site.pages.map((page) => (
@@ -561,8 +590,8 @@ export default function App() {
                       <Field label={t('field.slug')} value={activePage.slug} onChange={(slug) => updateActivePage({ slug: slugify(slug) })} />
                     </div>
                     <div style={{ marginTop: 10 }}>
-                      <ColorField label={t('field.pageBgColor')} value={activePage.bgColor ?? ''} onChange={(bgColor) => updateActivePage({ bgColor })} />
-                      <ImageField label={t('field.pageBgImage')} value={activePage.bgImage ?? ''} onChange={(bgImage) => updateActivePage({ bgImage })} />
+                      <ColorField label={t('field.pageBgColor')} value={activePage.bgColor ?? ''} onChange={(bgColor) => updateActivePage({ bgColor })} clearLabel={t('action.clear')} />
+                      <ImageField label={t('field.pageBgImage')} value={activePage.bgImage ?? ''} onChange={(bgImage) => updateActivePage({ bgImage })} t={t} />
                     </div>
                   </>
                 )}
@@ -575,7 +604,7 @@ export default function App() {
               <div className="block-stack">
                 {currentBlocks.map((block, index) => (
                   <article className={selectedId === block.id ? 'block-card active' : 'block-card'} draggable key={block.id} onDragStart={() => setDraggedId(block.id)} onDragEnd={() => setDraggedId(null)} onDragOver={(e) => e.preventDefault()} onDrop={() => { if (draggedId) reorderBlocks(draggedId, block.id); }}>
-                    <button className="drag-handle" aria-label={t('action.dragBlock')}>⠿</button>
+                    <button className="drag-handle" aria-label={t('action.dragBlock')}>в‹®</button>
                     <button className="block-main" onClick={() => setSelectedId(block.id)}>
                       <span>{index + 1}. {t(`block.${block.type}` as MessageKey)}</span>
                       <strong>{block.title}</strong>
@@ -608,13 +637,13 @@ export default function App() {
               </div>
               <div className="panel">
                 <h2>{t('section.logo')}</h2>
-                <ImageField label={t('field.logoUrl')} value={site.logo ?? ''} onChange={(logo) => updateSite({ ...site, logo })} />
+                <ImageField label={t('field.logoUrl')} value={site.logo ?? ''} onChange={(logo) => updateSite({ ...site, logo })} t={t} />
                 <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--sb-muted)' }}>{t('field.logoHint')}</p>
               </div>
               <div className="panel">
                 <h2>{t('section.pageBg')}</h2>
-                <ColorField label={t('field.bgColor')} value={site.bgColor ?? ''} onChange={(bgColor) => updateSite({ ...site, bgColor })} />
-                <ImageField label={t('field.bgImage')} value={site.bgImage ?? ''} onChange={(bgImage) => updateSite({ ...site, bgImage })} />
+                <ColorField label={t('field.bgColor')} value={site.bgColor ?? ''} onChange={(bgColor) => updateSite({ ...site, bgColor })} clearLabel={t('action.clear')} />
+                <ImageField label={t('field.bgImage')} value={site.bgImage ?? ''} onChange={(bgImage) => updateSite({ ...site, bgImage })} t={t} />
               </div>
             </div>
             <div style={{ display: 'grid', gap: 12, alignContent: 'start' }}>
@@ -637,13 +666,23 @@ export default function App() {
         {activeMenu === 'seo' && (
           <section className="settings-grid">
             <div className="panel">
-              <h2>{t('section.seo')}</h2>
+              <h2>{t('section.globalSeo')}</h2>
               <Field label={t('field.title')} value={site.seo.title} onChange={(title) => updateSite({ ...site, seo: { ...site.seo, title } })} />
               <Field label={t('field.description')} value={site.seo.description} textarea onChange={(description) => updateSite({ ...site, seo: { ...site.seo, description } })} />
-              <ImageField label={t('field.ogImage')} value={site.seo.image} onChange={(image) => updateSite({ ...site, seo: { ...site.seo, image } })} />
+              <ImageField label={t('field.ogImage')} value={site.seo.image} onChange={(image) => updateSite({ ...site, seo: { ...site.seo, image } })} t={t} />
               <Field label={t('field.keywords')} value={site.seo.keywords} onChange={(keywords) => updateSite({ ...site, seo: { ...site.seo, keywords } })} />
             </div>
-            <SeoCard site={site} />
+            {activePage && (
+              <div className="panel">
+                <h2>{t('section.pageSeo')}</h2>
+                <p className="panel-note">{t('seo.pageHelp')}</p>
+                <Field label={t('field.seoTitle')} value={activePage.seo?.title ?? ''} onChange={(title) => updateActivePage({ seo: { ...activePage.seo, title } })} placeholder={getPageSeo(site, activePage).title} />
+                <Field label={t('field.seoDescription')} value={activePage.seo?.description ?? ''} textarea onChange={(description) => updateActivePage({ seo: { ...activePage.seo, description } })} placeholder={site.seo.description} />
+                <ImageField label={t('field.seoImage')} value={activePage.seo?.image ?? ''} onChange={(image) => updateActivePage({ seo: { ...activePage.seo, image } })} t={t} />
+                <Field label={t('field.seoKeywords')} value={activePage.seo?.keywords ?? ''} onChange={(keywords) => updateActivePage({ seo: { ...activePage.seo, keywords } })} placeholder={site.seo.keywords} />
+              </div>
+            )}
+            <SeoCard site={site} page={activePage} t={t} />
           </section>
         )}
 
@@ -687,3 +726,4 @@ export default function App() {
     </div>
   );
 }
+

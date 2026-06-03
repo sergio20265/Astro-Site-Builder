@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import type { BlockAnimation, BlockStyle, PageContent, SiteBlock, SiteContent } from '../lib/site';
 import type { MessageKey, Messages } from '../lib/i18n';
 import { translate } from '../lib/i18n';
@@ -77,8 +77,9 @@ function EditableText({ className, multiline = false, value, onChange }: Editabl
   );
 }
 
-function ImageEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function ImageEditor({ value, onChange, messages }: { value: string; onChange: (v: string) => void; messages: Messages }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const t = (key: MessageKey) => translate(messages, key);
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -89,10 +90,10 @@ function ImageEditor({ value, onChange }: { value: string; onChange: (v: string)
   }
   return (
     <label className="preview-image-field" onClick={(e) => e.stopPropagation()}>
-      <span>Image URL</span>
+      <span>{t('field.imageUrl')}</span>
       <div className="preview-image-upload-row">
-        <input value={value.startsWith('data:') ? '' : value} onChange={(e) => onChange(e.target.value)} placeholder={value.startsWith('data:') ? '[local file]' : 'https://...'} readOnly={value.startsWith('data:')} />
-        <button type="button" className="preview-upload-btn" onClick={() => fileRef.current?.click()}>↑</button>
+        <input value={value.startsWith('data:') ? '' : value} onChange={(e) => onChange(e.target.value)} placeholder={value.startsWith('data:') ? t('placeholder.localFile') : 'https://...'} readOnly={value.startsWith('data:')} />
+        <button type="button" className="preview-upload-btn" aria-label={t('field.upload')} onClick={() => fileRef.current?.click()}>^</button>
         <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
       </div>
     </label>
@@ -116,7 +117,7 @@ function BlockView({ block, messages, active, onSelect, onUpdateBlock, onOpenLig
         </div>
         <div className="preview-media-editor">
           {block.image ? <img src={block.image} alt="" /> : <div className="image-placeholder" />}
-          <ImageEditor value={block.image} onChange={(image) => onUpdateBlock(block.id, { image })} />
+          <ImageEditor value={block.image} onChange={(image) => onUpdateBlock(block.id, { image })} messages={messages} />
         </div>
       </section>
     );
@@ -143,7 +144,7 @@ function BlockView({ block, messages, active, onSelect, onUpdateBlock, onOpenLig
             <figure key={index}>
               <div className="preview-media-editor">
                 {image.src ? <button className="image-button" onClick={(e) => { e.stopPropagation(); onOpenLightbox({ src: image.src, caption: image.caption }); }}><img src={image.src} alt={image.caption} /></button> : <div className="image-placeholder" />}
-                <ImageEditor value={image.src} onChange={(src) => { const images = [...block.images]; images[index] = { ...image, src }; onUpdateBlock(block.id, { images }); }} />
+                <ImageEditor value={image.src} onChange={(src) => { const images = [...block.images]; images[index] = { ...image, src }; onUpdateBlock(block.id, { images }); }} messages={messages} />
               </div>
               <figcaption><EditableText value={image.caption} onChange={(caption) => { const images = [...block.images]; images[index] = { ...image, caption }; onUpdateBlock(block.id, { images }); }} /></figcaption>
             </figure>
@@ -160,7 +161,7 @@ function BlockView({ block, messages, active, onSelect, onUpdateBlock, onOpenLig
             <article key={index}>
               <div className="preview-media-editor">
                 {item.image ? <button className="image-button" onClick={(e) => { e.stopPropagation(); onOpenLightbox({ src: item.image, caption: item.title }); }}><img src={item.image} alt={item.title} /></button> : <div className="image-placeholder" />}
-                <ImageEditor value={item.image} onChange={(image) => { const items = [...block.items]; items[index] = { ...item, image }; onUpdateBlock(block.id, { items }); }} />
+                <ImageEditor value={item.image} onChange={(image) => { const items = [...block.items]; items[index] = { ...item, image }; onUpdateBlock(block.id, { items }); }} messages={messages} />
               </div>
               <small><EditableText value={item.category} onChange={(category) => { const items = [...block.items]; items[index] = { ...item, category }; onUpdateBlock(block.id, { items }); }} /></small>
               <h3><EditableText value={item.title} onChange={(title) => { const items = [...block.items]; items[index] = { ...item, title }; onUpdateBlock(block.id, { items }); }} /></h3>
@@ -176,7 +177,7 @@ function BlockView({ block, messages, active, onSelect, onUpdateBlock, onOpenLig
         <div>
           <h2><EditableText value={block.title} onChange={(title) => onUpdateBlock(block.id, { title })} /></h2>
           <p><EditableText multiline value={block.text} onChange={(text) => onUpdateBlock(block.id, { text })} /></p>
-          <ImageEditor value={block.url} onChange={(url) => onUpdateBlock(block.id, { url })} />
+          <ImageEditor value={block.url} onChange={(url) => onUpdateBlock(block.id, { url })} messages={messages} />
         </div>
         <div className="video-frame">
           {block.url ? <iframe src={block.url} title={block.title} allowFullScreen /> : <div className="image-placeholder" />}
@@ -316,14 +317,14 @@ export default function SitePreview({ site, page, messages, activeBlockId, onSel
               ? (
                 <div className="preview-logo-group">
                   <img src={site.logo} alt={site.name} className="site-logo" />
-                  <button className="preview-logo-clear" title="Remove logo" onClick={() => onUpdateSite({ logo: '' })}>×</button>
+                  <button className="preview-logo-clear" title={translate(messages, 'action.removeLogo')} aria-label={translate(messages, 'action.removeLogo')} onClick={() => onUpdateSite({ logo: '' })}>x</button>
                 </div>
               )
               : (
                 <strong><EditableText value={site.name} onChange={(name) => onUpdateSite({ name })} /></strong>
               )
             }
-            <button className="preview-logo-upload-btn" title="Upload logo" onClick={() => logoUploadRef.current?.click()}>↑ logo</button>
+            <button className="preview-logo-upload-btn" title={translate(messages, 'action.uploadLogo')} onClick={() => logoUploadRef.current?.click()}>^ {translate(messages, 'field.logoShort')}</button>
             <input ref={logoUploadRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoUpload} />
           </div>
           {headerNav && (
@@ -369,3 +370,4 @@ export default function SitePreview({ site, page, messages, activeBlockId, onSel
     </>
   );
 }
+
