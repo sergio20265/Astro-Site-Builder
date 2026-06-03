@@ -210,5 +210,10 @@
   "field.timelineTitle": "Заголовок события",
   "action.exportHtml": "Экспорт HTML",
   "preview.mobile": "Мобильный",
-  "preview.desktop": "Десктоп"
+  "preview.desktop": "Десктоп",
+  "field.formAction": "URL обработчика",
+  "field.formMethod": "HTTP метод",
+  "field.successMessage": "Сообщение об успехе",
+  "form.actionHelp": "Куда отправлять данные. Используйте Formspree (formspree.io), Netlify Forms или свой эндпоинт. Оставьте пустым чтобы отключить.",
+  "action.removeField": "Удалить"
 }

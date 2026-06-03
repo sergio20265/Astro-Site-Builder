@@ -321,6 +321,18 @@ function BlockContentEditor({ block, updateBlock, t }: { block: SiteBlock; updat
       <Field label={t('field.title')} value={block.title} onChange={(title) => updateBlock(block.id, { title })} />
       <Field label={t('field.text')} value={block.text} textarea onChange={(text) => updateBlock(block.id, { text })} />
       <Field label={t('field.submitLabel')} value={block.submitLabel} onChange={(submitLabel) => updateBlock(block.id, { submitLabel })} />
+      <Field label={t('field.successMessage')} value={block.successMessage ?? ''} onChange={(successMessage) => updateBlock(block.id, { successMessage })} placeholder="Thank you! We'll be in touch soon." />
+      <div className="form-settings-row">
+        <Field label={t('field.formAction')} value={block.action ?? ''} onChange={(action) => updateBlock(block.id, { action })} placeholder="https://formspree.io/f/..." />
+        <div className="field">
+          <span>{t('field.formMethod')}</span>
+          <select value={block.method ?? 'POST'} onChange={(e) => updateBlock(block.id, { method: e.target.value as 'POST' | 'GET' })}>
+            <option value="POST">POST</option>
+            <option value="GET">GET</option>
+          </select>
+        </div>
+      </div>
+      <p className="panel-note" style={{ marginTop: -4, marginBottom: 12 }}>{t('form.actionHelp')}</p>
       {block.fields.map((field, index) => (
         <div className="repeat-row form-field-row" key={index}>
           <Field label={t('field.label')} value={field.label} onChange={(label) => { const fields = [...block.fields]; fields[index] = { ...field, label }; updateBlock(block.id, { fields }); }} />
@@ -333,10 +345,13 @@ function BlockContentEditor({ block, updateBlock, t }: { block: SiteBlock; updat
               <option value="textarea">{t('formField.textarea')}</option>
             </select>
           </label>
-          <label className="check-row">
-            <input type="checkbox" checked={field.required} onChange={(e) => { const fields = [...block.fields]; fields[index] = { ...field, required: e.target.checked }; updateBlock(block.id, { fields }); }} />
-            {t('field.required')}
-          </label>
+          <div className="form-field-bottom-row">
+            <label className="check-row">
+              <input type="checkbox" checked={field.required} onChange={(e) => { const fields = [...block.fields]; fields[index] = { ...field, required: e.target.checked }; updateBlock(block.id, { fields }); }} />
+              {t('field.required')}
+            </label>
+            <button className="danger-button" onClick={() => updateBlock(block.id, { fields: block.fields.filter((_, i) => i !== index) })}>{t('action.removeField')}</button>
+          </div>
         </div>
       ))}
       <button className="soft-button" onClick={() => updateBlock(block.id, { fields: [...block.fields, { label: 'New field', kind: 'text', required: false }] })}>{t('action.addField')}</button>

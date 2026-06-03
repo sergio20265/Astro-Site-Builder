@@ -70,7 +70,7 @@ export type SiteBlock =
   | { id: string; type: 'video'; title: string; text: string; url: string; poster: string; style?: BlockStyle; animation?: BlockAnimation }
   | { id: string; type: 'testimonials'; title: string; items: Array<{ name: string; text: string }>; style?: BlockStyle; animation?: BlockAnimation }
   | { id: string; type: 'faq'; title: string; items: Array<{ q: string; a: string }>; style?: BlockStyle; animation?: BlockAnimation }
-  | { id: string; type: 'form'; title: string; text: string; submitLabel: string; fields: Array<{ label: string; kind: 'text' | 'email' | 'tel' | 'textarea'; required: boolean }>; style?: BlockStyle; animation?: BlockAnimation }
+  | { id: string; type: 'form'; title: string; text: string; submitLabel: string; action?: string; method?: 'POST' | 'GET'; successMessage?: string; fields: Array<{ label: string; kind: 'text' | 'email' | 'tel' | 'textarea'; required: boolean }>; style?: BlockStyle; animation?: BlockAnimation }
   | { id: string; type: 'contact'; title: string; text: string; email: string; phone: string; address: string; style?: BlockStyle; animation?: BlockAnimation }
   | { id: string; type: 'sidebar'; title: string; position: 'left' | 'right'; widgets: SidebarWidget[]; style?: BlockStyle; animation?: BlockAnimation }
   | { id: string; type: 'pricing'; title: string; items: Array<{ name: string; price: string; period: string; features: string; highlight: boolean }>; style?: BlockStyle; animation?: BlockAnimation }

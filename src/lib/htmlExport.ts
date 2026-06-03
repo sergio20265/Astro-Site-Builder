@@ -64,13 +64,19 @@ function renderBlock(block: SiteBlock): string {
   <h2>${escHtml(block.title)}</h2>
   <div class="faq-list">${block.items.map((it, i) => `<details${i === 0 ? ' open' : ''}><summary>${escHtml(it.q)}</summary><p>${escHtml(it.a)}</p></details>`).join('')}</div>
 </section>`;
-    case 'form':
+    case 'form': {
+      const formAttrs = block.action
+        ? ` action="${escHtml(block.action)}" method="${block.method ?? 'POST'}" data-sb-form`
+        : '';
+      const successMsg = block.successMessage || "Thank you! We'll be in touch soon.";
       return `<section class="preview-section form-section${pc}"${si}>
   <h2>${escHtml(block.title)}</h2>
   <p>${escHtml(block.text)}</p>
-  <form>${block.fields.map((f) => `<label>${escHtml(f.label)}${f.required ? ' *' : ''}${f.kind === 'textarea' ? '<textarea rows="3"></textarea>' : `<input type="${f.kind}" />`}</label>`).join('')}
+  <form${formAttrs}>${block.fields.map((f) => `<label>${escHtml(f.label)}${f.required ? ' *' : ''}${f.kind === 'textarea' ? `<textarea name="${escHtml(f.label.toLowerCase().replace(/\s+/g, '_'))}" rows="3"${f.required ? ' required' : ''}></textarea>` : `<input type="${f.kind}" name="${escHtml(f.label.toLowerCase().replace(/\s+/g, '_'))}"${f.required ? ' required' : ''} />`}</label>`).join('')}
   <button type="submit">${escHtml(block.submitLabel)}</button></form>
+  <div class="form-success" style="display:none;padding:16px;background:color-mix(in srgb,var(--preview-accent),transparent 88%);border-radius:8px;color:var(--preview-accent);font-weight:600">${escHtml(successMsg)}</div>
 </section>`;
+    }
     case 'contact':
       return `<section class="preview-section contact-band${pc}" id="contact"${si}>
   <h2>${escHtml(block.title)}</h2>
@@ -261,6 +267,21 @@ footer{padding:16px 24px;border-top:1px solid color-mix(in srgb,var(--preview-te
 }`;
 }
 
+const formScript = `<script>
+(function(){
+  document.querySelectorAll('form[data-sb-form]').forEach(function(form){
+    var success=form.parentNode.querySelector('.form-success');
+    form.addEventListener('submit',function(e){
+      e.preventDefault();
+      if(!form.action||form.action.indexOf('#')>-1)return;
+      fetch(form.action,{method:form.method||'POST',body:new FormData(form),headers:{Accept:'application/json'}})
+        .then(function(r){if(r.ok){form.style.display='none';if(success)success.style.display='block';}})
+        .catch(function(){});
+    });
+  });
+})();
+</script>`;
+
 const countUpScript = `<script>
 (function(){
   var els=document.querySelectorAll('.stats-value[data-target]');
@@ -310,6 +331,7 @@ export function generateHtml(site: SiteContent, page: PageContent): string {
   const headerNav = site.navGroups?.find((g) => g.position === 'header');
   const footerNav = site.navGroups?.find((g) => g.position === 'footer');
   const hasStats = page.blocks.some((b) => b.type === 'stats');
+  const hasForms = page.blocks.some((b) => b.type === 'form' && (b as Extract<SiteBlock, { type: 'form' }>).action);
 
   const sidebarBlocks = page.blocks.filter((b): b is Extract<SiteBlock, { type: 'sidebar' }> => b.type === 'sidebar');
   const mainBlocks = page.blocks.filter((b) => b.type !== 'sidebar');
@@ -347,6 +369,7 @@ ${mainBlocks.map(renderBlock).join('\n')}
 ${sidebarBlocks.map(renderBlock).join('\n')}
 ${footerNav ? `<footer><span>${escHtml(site.name)}</span><nav>${footerNav.items.map((i) => `<a href="${escHtml(i.href)}">${escHtml(i.label)}</a>`).join('')}</nav></footer>` : ''}
 </div>
+${hasForms ? formScript : ''}
 ${hasStats ? countUpScript : ''}
 </body>
 </html>`;

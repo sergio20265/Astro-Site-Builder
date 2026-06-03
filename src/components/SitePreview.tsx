@@ -205,7 +205,7 @@ function BlockView({ block, messages, active, onSelect, onUpdateBlock, onOpenLig
       <section className={`${shellClass} preview-section form-section ${padClass}`} style={blockStyle} onClick={onSelect}>
         <h2><EditableText value={block.title} onChange={(title) => onUpdateBlock(block.id, { title })} /></h2>
         <p><EditableText multiline value={block.text} onChange={(text) => onUpdateBlock(block.id, { text })} /></p>
-        <form>
+        <form {...(block.action ? { action: block.action, method: block.method ?? 'POST' } : {})}>
           {block.fields.map((field, index) => (
             <label key={index}>
               <span><EditableText value={field.label} onChange={(label) => { const fields = [...block.fields]; fields[index] = { ...field, label }; onUpdateBlock(block.id, { fields }); }} />{field.required ? ' *' : ''}</span>
@@ -214,6 +214,12 @@ function BlockView({ block, messages, active, onSelect, onUpdateBlock, onOpenLig
           ))}
           <button type="button"><EditableText value={block.submitLabel} onChange={(submitLabel) => onUpdateBlock(block.id, { submitLabel })} /></button>
         </form>
+        {block.successMessage && (
+          <p className="form-success-preview">{block.successMessage}</p>
+        )}
+        {block.action && (
+          <p className="form-action-note">→ {block.action}</p>
+        )}
       </section>
     );
 

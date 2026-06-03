@@ -210,5 +210,10 @@
   "field.timelineTitle": "Milestone title",
   "action.exportHtml": "Export HTML",
   "preview.mobile": "Mobile",
-  "preview.desktop": "Desktop"
+  "preview.desktop": "Desktop",
+  "field.formAction": "Action URL",
+  "field.formMethod": "HTTP method",
+  "field.successMessage": "Success message",
+  "form.actionHelp": "Where to send the form. Use Formspree (formspree.io), Netlify Forms, or your own endpoint. Leave empty to disable.",
+  "action.removeField": "Remove"
 }
